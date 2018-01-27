@@ -76,6 +76,7 @@ gulp.task('nodemon',() => nodemon({
 }));
 
 // used for deployment to prod/staging, do not use for development
-gulp.task('serve', ['clean'], (cb) => runSequence('build-server-prod', 'build-frontend-prod', 'nodemon', cb));
+// gulp.task('serve', ['clean'], (cb) => runSequence('build-server-prod', 'build-frontend-prod', 'nodemon', cb));
+gulp.task('serve', ['clean'], (cb) => runSequence('build-server', 'nodemon', cb));
 
 gulp.task('default', ['build']);
