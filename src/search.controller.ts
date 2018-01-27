@@ -4,11 +4,11 @@ import fetch from 'node-fetch';
 import * as Types from './types';
 
 export const search = (req: Request, res: Response, next: NextFunction) => {
-  console.log('[search.controller]', 'query', req.params);
+  console.log('[search.controller]', 'query', req.query);
 
   return Promise.resolve().then(
     () => {
-      return fetch('http://54.177.38.37:8080/api/search?lat_lng=37.468614,-122.2067982&category=Health');
+      return fetch(`https://api.smc-connect.org/search?lat_lng=${req.query.lat},${req.query.lng}&category=Health`);
     }
   ).then(
     res => res.json()
