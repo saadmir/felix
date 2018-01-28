@@ -55,7 +55,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
     (category: string) => {
       if (category) {
         let url = `${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`;
-        if (parameters) {
+        if (parameters && parameters.length) {
           url = `${url}&parameters=${parameters.join(',')}`;
         }
 
@@ -76,12 +76,13 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
           response.data = data;
         } else {
           response.text = process.env.EMPTY_RESULT_TEXT;
+          const sessionId = response.sessionId;
           delete response.sessionId;
           const data = {
-            sessionId: response.sessionId,
+            sessionId: sessionId,
             timestamp: Date.now(),
           };
-          db.ref('community_requests').child(response.sessionId).push().set(data).catch((err) => console.log('firebase error'));
+          db.ref('community_requests').child(sessionId).push().set(data).catch((err) => console.log('firebase error'));
         }
       }
     }
