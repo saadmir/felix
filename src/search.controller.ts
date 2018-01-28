@@ -33,6 +33,8 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
       if (result.actionIncomplete) {
         return '';
       }
+
+      console.log('[search.controller]', '500', result.action);
       return (result.action || 'health').replace(/FX\-/i, '');
     }
   ).then(
@@ -44,7 +46,14 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   ).then(
     (data) => {
       if (data) {
-        response.data = data.json();
+        return data.json();
+      }
+    }
+  ).then(
+    (data) => {
+      if (data) {
+        response.data = data;
+        console.log('[search.controller]', '600', response);
       }
     }
   ).then(
