@@ -3,9 +3,9 @@ import * as ApiAi from 'apiai';
 const apiai = ApiAi("b01309813e3c410993cb1d753236881f");
 
 export class DialogFlow {
-  static Search(query: string) {
+  static Search(sessionId: string, query: string) {
     const request = apiai.textRequest(query, {
-      sessionId: 'some_session_id'
+      sessionId:  sessionId
     });
 
     return new Promise((resolve, reject) => {

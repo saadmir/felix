@@ -2,32 +2,54 @@ import { Request, Response, NextFunction } from 'express';
 import * as _ from 'lodash';
 import fetch from 'node-fetch';
 import * as Types from './types';
-
+import * as uuidv1 from 'uuid/v1';
 
 import { DialogFlow } from './utils/DialogFlow';
 import { HashObject } from './types';
 
+const sessions: HashObject = {};
+
 export const search = (req: Request, res: Response, next: NextFunction) => {
   console.log('[search.controller]', 'query', req.query);
 
+  const response: HashObject = {
+    sessionId: req.query.sessionId || uuidv1(),
+    success: true,
+  };
+
+  sessions[response.sessionId] = sessions[response.sessionId] || {};
+  sessions[response.sessionId].updated_at = Date.now();
+
   return Promise.resolve().then(
     () => {
-      return DialogFlow.Search(req.query.queryText || 'health');
+      return DialogFlow.Search(response.sessionId, req.query.queryText || 'health');
     }
   ).then(
     (data: HashObject) => {
-      console.log('[search.controller]', 'result', ((data || {}).result || {}).action || '');
-      return (((data || {}).result || {}).action || 'health').replace(/FX\-/i, '');
+      console.log('[search.controller]', 'data', data);
+      const result = (data || {}).result || {};
+      console.log('[search.controller]', 'action', result.action || '');
+      response.text = (result.fulfillment || {}).speech || '';
+      if (result.actionIncomplete) {
+        return '';
+      }
+      return (result.action || 'health').replace(/FX\-/i, '');
     }
   ).then(
-    (category) => {
-      return fetch(`https://api.smc-connect.org/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`);
+    (category: string) => {
+      if (category) {
+        return fetch(`https://api.smc-connect.org/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`);
+      }
     }
-  ).then(
-    res => res.json()
   ).then(
     (data) => {
-      res.json({success: true, data}).end();
+      if (data) {
+        response.data = data.json();
+      }
+    }
+  ).then(
+    () => {
+      res.json(response).end();
     }
   ).catch(
     (err) => {
