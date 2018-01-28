@@ -23,6 +23,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   const db = firebase.database();
 
   let dialogFlowResponse = {};
+  let parameters: Array<string> = [];
   const response: HashObject = {
     sessionId: req.query.sessionId || uuidv1(),
     data: [],
@@ -41,6 +42,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
       console.log('[search.controller]', 'data', data);
       dialogFlowResponse = data;
       const result = (data || {}).result || {};
+      parameters = _.values(result.parameters || {}) || [];
       console.log('[search.controller]', 'action', result.action || '');
       response.text = (result.fulfillment || {}).speech || '';
       if (result.actionIncomplete) {
@@ -52,7 +54,13 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   ).then(
     (category: string) => {
       if (category) {
-        return fetch(`${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`);
+        let url = `${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`;
+        if (parameters) {
+          url = `${url}&parameters=${parameters.join(',')}`;
+        }
+
+        console.log(url);
+        return fetch(url);
       }
     }
   ).then(
@@ -74,16 +82,14 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   ).then(
     () => {
       if (req.query.phone) {
-        const userRef = db.ref(req.query.phone);
-        const ref1 = userRef.child(response.sessionId);
-        const ref2 = ref1.push();
-        ref2.set({
+        const data = JSON.stringify({
           timestamp: Date.now(),
           sessionId: response.sessionId,
           request: req.query,
           response: response,
-          dialogFlowResponse: JSON.stringify(dialogFlowResponse)
-        }).catch((err) => console.log('firebase error'));
+          dialogFlowResponse: dialogFlowResponse
+        });
+        db.ref(req.query.phone).child(response.sessionId).push().set(data).catch((err) => console.log('firebase error'));
       }
 
       res.json(response).end();
