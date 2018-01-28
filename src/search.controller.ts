@@ -23,7 +23,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   const db = firebase.database();
 
   let dialogFlowResponse = {};
-  let parameters: Array<string> = [];
+  let parameters: string = '';
   const response: HashObject = {
     sessionId: req.query.sessionId || uuidv1(),
     data: [],
@@ -42,7 +42,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
       console.log('[search.controller]', 'data', data);
       dialogFlowResponse = data;
       const result = (data || {}).result || {};
-      parameters = _.values(result.parameters || {}) || [];
+      parameters = (_.values(result.parameters || {}) || []).join(',');
       console.log('[search.controller]', 'action', result.action || '');
       response.text = (result.fulfillment || {}).speech || '';
       if (result.actionIncomplete) {
@@ -55,8 +55,8 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
     (category: string) => {
       if (category) {
         let url = `${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`;
-        if (parameters && parameters.length) {
-          url = `${url}&parameters=${parameters.join(',')}`;
+        if (parameters && parameters.length > 1) {
+          url = `${url}&parameters=${parameters}`;
         }
 
         console.log(url);
@@ -77,18 +77,19 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
         } else {
           response.text = process.env.EMPTY_RESULT_TEXT;
           const sessionId = response.sessionId;
-          delete response.sessionId;
           const data = {
             sessionId: sessionId,
             timestamp: Date.now(),
+            phone: req.query.phone
           };
-          db.ref('community_requests').child(sessionId).push().set(data).catch((err) => console.log('firebase error'));
+          db.ref('community_requests').child(sessionId).push().set(data).catch((err) => console.log('firebase error', 'community_requests'));
+          delete response.sessionId;
         }
       }
     }
   ).then(
     () => {
-      if (req.query.phone) {
+      if (response.sessionId) {
         const data = {
           request: req.query,
           sessionId: response.sessionId,
@@ -96,9 +97,8 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
           timestamp: Date.now(),
           dialogFlowResponse: JSON.stringify(dialogFlowResponse)
         };
-        db.ref(req.query.phone).child(response.sessionId).push().set(data).catch((err) => console.log('firebase error'));
+        db.ref(req.query.phone).child(response.sessionId).push().set(data).catch((err) => console.log('firebase error', 'conversation'));
       }
-
       res.json(response).end();
     }
   ).catch(
