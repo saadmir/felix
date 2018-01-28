@@ -76,6 +76,12 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
           response.data = data;
         } else {
           response.text = process.env.EMPTY_RESULT_TEXT;
+          delete response.sessionId;
+          const data = {
+            sessionId: response.sessionId,
+            timestamp: Date.now(),
+          };
+          db.ref('community_requests').child(response.sessionId).push().set(data).catch((err) => console.log('firebase error'));
         }
       }
     }
