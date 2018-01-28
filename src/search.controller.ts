@@ -82,13 +82,13 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
   ).then(
     () => {
       if (req.query.phone) {
-        const data = JSON.stringify({
-          timestamp: Date.now(),
-          sessionId: response.sessionId,
+        const data = {
           request: req.query,
-          response: response,
-          dialogFlowResponse: dialogFlowResponse
-        });
+          sessionId: response.sessionId,
+          response: JSON.stringify(response),
+          timestamp: Date.now(),
+          dialogFlowResponse: JSON.stringify(dialogFlowResponse)
+        };
         db.ref(req.query.phone).child(response.sessionId).push().set(data).catch((err) => console.log('firebase error'));
       }
 
