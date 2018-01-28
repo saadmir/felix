@@ -18,7 +18,7 @@ public/css/main.css
 
 # API keys and secrets
 .env
-.google_auth.json
+firebase.json
 
 # Dependency directory
 node_modules
