@@ -1,9 +1,9 @@
 import * as ApiAi from 'apiai';
 
-const apiai = ApiAi("b01309813e3c410993cb1d753236881f");
 
 export class DialogFlow {
   static Search(sessionId: string, query: string) {
+    const apiai = ApiAi(process.env.DIALOGFLOW_API_KEY);
     const request = apiai.textRequest(query, {
       sessionId:  sessionId
     });

@@ -14,6 +14,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
 
   const response: HashObject = {
     sessionId: req.query.sessionId || uuidv1(),
+    data: [],
     success: true,
   };
 
@@ -34,13 +35,12 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
         return '';
       }
 
-      console.log('[search.controller]', '500', result.action);
       return (result.action || 'health').replace(/FX\-/i, '');
     }
   ).then(
     (category: string) => {
       if (category) {
-        return fetch(`https://api.smc-connect.org/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`);
+        return fetch(`${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`);
       }
     }
   ).then(
@@ -53,7 +53,6 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
     (data) => {
       if (data) {
         response.data = data;
-        console.log('[search.controller]', '600', response);
       }
     }
   ).then(
