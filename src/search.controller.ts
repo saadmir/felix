@@ -53,7 +53,7 @@ export const search = (req: Request, res: Response, next: NextFunction) => {
     }
   ).then(
     (category: string) => {
-      if (category) {
+      if ( category && /Food|Housing|Transit|Personal Hygiene|Medical Care/ig.test(category) ) {
         let url = `${process.env.OHANA_URL}/search?lat_lng=${req.query.lat},${req.query.lng}&category=${category}`;
         if (parameters && parameters.length > 1) {
           url = `${url}&parameters=${parameters}`;
