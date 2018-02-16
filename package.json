@@ -67,6 +67,7 @@
     "nodemailer": "^4.4.0",
     "npm-check-updates": "^2.13.0",
     "pug": "^2.0.0-rc.4",
+    "twilio": "^3.11.2",
     "uuid": "^3.2.1"
   },
   "devDependencies": {

@@ -1,16 +1,24 @@
 FROM mhart/alpine-node:8
 
-RUN apk update && apk upgrade && apk add --no-cache --update python make gcc g++
+RUN apk update
+RUN apk upgrade
+RUN apk add --no-cache --update python make gcc g++ tini dialog openssh-server
+RUN rm  -rf /tmp/* /var/cache/apk/*
 
-EXPOSE 3000
+# ssh
+ARG SSH_PASSWD="root:password"
+RUN echo "$SSH_PASSWD" | chpasswd
+COPY ./.ssh/sshd_config /etc/ssh/
+RUN rm -rf /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_dsa_key
+RUN /usr/bin/ssh-keygen -A
 
-COPY . /felix
-WORKDIR /felix
+EXPOSE 3000 2222
 
+COPY . /app
+WORKDIR /app
+
+RUN rm -rf node_modules
 RUN npm install
-#RUN npm run install-frontend
-#RUN ./node_modules/.bin/gulp build-prod
 
-#RUN cp -rf /zweb/dist/public /var/www/
-
-CMD ./node_modules/.bin/gulp serve
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD nohup ./node_modules/.bin/gulp serve > nohup.log & /usr/sbin/sshd -D
